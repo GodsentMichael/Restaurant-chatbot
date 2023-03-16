@@ -25,9 +25,7 @@ const sessionMiddleware = session({
 	saveUninitialized: true,
 	cookie: {
 		secure: false,
-		//set expiry time for session to 7 days
-		// maxAge: 1000 * 60 * 60 * 24 * 7,
-		maxAge: 120000,
+		maxAge: 6000,
 	},
 });
 const bot = 'foodBot';
@@ -35,7 +33,6 @@ const bot = 'foodBot';
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
-
 
 io.on('connection', (socket) => {
 	const request = socket.request;
@@ -61,39 +58,38 @@ io.on('connection', (socket) => {
 
 	// DB Related functions.
 	async function addOrderToDB(userId, items, total) {
-    const order = {
-      user_id: sessionId,
-      items: items,
-      total: total
-    };
-	try {
-		// Insert order into database
-		await Order.create(order);
-		console.log('Order added to DB');
-	} catch (err) {
-		console.error(err);
+		const order = {
+			user_id: sessionId,
+			items: items,
+			total: total,
+		};
+		try {
+			// Insert order into database
+			await Order.create(order);
+			console.log('Order added to DB');
+		} catch (err) {
+			console.error(err);
+		}
+		return res.json({ status: true, order });
 	}
-	return res.json({ status: true, order })
-		
-  }
 
-    // Get all orders for a given user ID = sessionId
+	// Get all orders for a given user ID = sessionId
 	async function getOrdersForUser(sessionId) {
 		const query = { user_id: sessionId };
 		return Order.find(query).toArray();
-	  }
+	}
 
-   // Get the user's order history
-   async function getOrderHistory(session) {
-    if (!session.userOrder) {
-      // User does not have a session order.
-      return [];
-    }
-    // Get the user's ID from their session
-    // const userId = session.user.id;
-    // Get all orders for the user from the database
-    return getOrdersForUser(sessionId);
-  }
+	// Get the user's order history
+	async function getOrderHistory(session) {
+		if (!session.userOrder) {
+			// User does not have a session order.
+			return [];
+		}
+		// Get the user's ID from their session
+		// const userId = session.user.id;
+		// Get all orders for the user from the database
+		return getOrdersForUser(sessionId);
+	}
 
 	//join the socket to the session id
 	socket.join(sessionId);
@@ -161,8 +157,6 @@ io.on('connection', (socket) => {
 					progress = 2;
 					return;
 				} else if (inputNumber === 99) {
-					
-
 					// Create an object representing the user's order
 					const userOrder = {
 						items: [],
@@ -184,7 +178,6 @@ io.on('connection', (socket) => {
 					// Where we begin.
 					// Convert the userOrder.items array to a string
 					const userOrderToJSON = JSON.stringify(userOrder);
-
 
 					// Retrieve the JSON string from local storage
 					const userOrderJSON = localStorage.getItem('userOrder');
@@ -219,20 +212,19 @@ io.on('connection', (socket) => {
 				} else if (inputNumber === 98) {
 					// LOGIC FOR ORDER HISTORY
 					// Check if user has an active session order.
-					if(session.userOrder) {
+					if (session.userOrder) {
 						// Get the current user's order from their session
 						const order = session.userOrder.items;
 						// Display the order data
-						console.log(order);}
-					 else if (session.userOrder.items.length === 0) {
-					   // User does not have an active order
-					   io.to(sessionId).emit(
-						   'chat message',
-						   formatMessage('bot', `You do not have any order yet`)
-					   );
-					   
-				   }
-						
+						console.log(order);
+					} else if (session.userOrder.items.length === 0) {
+						// User does not have an active order
+						io.to(sessionId).emit(
+							'chat message',
+							formatMessage('bot', `You do not have any order yet`)
+						);
+					}
+
 					io.to(sessionId).emit(
 						'chat message',
 						formatMessage(
@@ -259,8 +251,8 @@ io.on('connection', (socket) => {
 								<br />`
 						)
 					);
-	
-					return progress = 1;
+
+					return (progress = 1);
 					// DISPLAY ORDER HISTORY
 					// function handleGetOrderHistory(socket) {
 					// 	const session = socket.request.session;
@@ -280,26 +272,25 @@ io.on('connection', (socket) => {
 					// 	formatMessage(
 					// 		'bot',
 					// 		`Here is your order history: <br> ${session.userOrder.items} <br> Total: ${session.userOrder.total}`
-						// )
+					// )
 					// );
 				} else if (inputNumber === 97) {
 					// Logic here to see current order
 
 					// Check if user has an active session order.
-					if(session.userOrder) {
+					if (session.userOrder) {
 						// Get the current user's order from their session
 						const order = session.userOrder.items;
 						// Display the order data
-						console.log(order);}
-					 else if (session.userOrder.items.length === 0) {
-					   // User does not have an active order
-					   io.to(sessionId).emit(
-						   'chat message',
-						   formatMessage('bot', `You do not have any order yet`)
-					   );
-					   
-				   }
-						
+						console.log(order);
+					} else if (session.userOrder.items.length === 0) {
+						// User does not have an active order
+						io.to(sessionId).emit(
+							'chat message',
+							formatMessage('bot', `You do not have any order yet`)
+						);
+					}
+
 					io.to(sessionId).emit(
 						'chat message',
 						formatMessage(
@@ -308,7 +299,6 @@ io.on('connection', (socket) => {
 							Item:${session.userOrder.items} <br> Price: ${session.userOrder.total}`
 						)
 					);
-					
 
 					io.to(sessionId).emit(
 						'chat message',
@@ -327,61 +317,122 @@ io.on('connection', (socket) => {
 								<br />`
 						)
 					);
-	
-					return progress = 1;
-					
 
+					return (progress = 1);
 				} else if (inputNumber === 0) {
 					// Logic here to cancel order
-					function savedSession() {
-						// if (inputNumber === 0) {
-							// To cancel order
-							try{
-								
-							} catch (err){
-								console.log(err);
-							}
-							const selectedItem = menuItems.find(
-								(item) => item.id === inputNumber
-							);
+					io.to(sessionId).emit(
+						'chat message',
+						formatMessage('bot', `Your order has been cancelled successfully`)
+					);
+					// function toCancelOrder(selectedItemName) {
+					// 	// const selectedItemName = 1 || 2 || 3 || 4 || 5 || 6 
+					// 	if (!selectedItemName) {
+					// 		io.to(sessionId).emit(
+					// 			'chat message',
+					// 			formatMessage('bot', `Please specify the item you want to cancel`)
+					// 		);
+					// 		return;
+					// 	}
+					// 	if (session.userOrder.items.length > 0) {
+					// 		// const selectedItem = menuItems.find((item) => item.name === selectedItemName);
+					// 		const selectedItemId = parseInt(selectedItemName);
+					// 		const selectedItem = menuItems.find(item =>
+					// 			item.id === selectedItemId && session.userOrder.items.includes(item.name)
+					// 		  );
+					// 		if (session.userOrder.items.includes(selectedItemName)) {
+					// 			const index = session.userOrder.items.indexOf(selectedItemName);
+					// 			session.userOrder.items.splice(index, 1);
+					// 			session.userOrder.total -= selectedItem.price;
+					// 			console.log(selectedItemName);
+					// 			io.to(sessionId).emit(
+					// 				'chat message',
+					// 				formatMessage('bot', `Your order has been cancelled successfully`)
+					// 			);
+					// 		// } else if(selectedItemName === 'Burger') {
+					// 		// 	io.to(sessionId).emit(
+					// 		// 		'chat message',
+					// 		// 		formatMessage('bot', `Your order ${'Burger'} has been successfully cancelled`)
+					// 		// 	);
+					// 		// } else if(selectedItemName === 'Pizza'){
+					// 		// 	io.to(sessionId).emit(
+					// 		// 		'chat message',
+					// 		// 		formatMessage('bot', `Your order ${'Pizza'} has been successfully cancelled`)
+					// 		// 	);
+					// 		// } else if(selectedItemName === 'Salad'){
+					// 		// 	io.to(sessionId).emit(
+					// 		// 		'chat message',
+					// 		// 		formatMessage('bot', `Your order ${'Salad'} has been successfully cancelled`)
+					// 		// 	);
+					// 		// } else if(selectedItemName === 'Rice'){
+					// 		// 	io.to(sessionId).emit(
+					// 		// 		'chat message',
+					// 		// 		formatMessage('bot', `Your order ${'Rice'} has been successfully cancelled`)
+					// 		// 	);
+					// 		// } else if(selectedItemName === 'Beans'){
+					// 		// 	io.to(sessionId).emit(
+					// 		// 		'chat message',
+					// 		// 		formatMessage('bot', `Your order ${'Beans'} has been successfully cancelled`)
+					// 		// 	);
+					// 		// } else if(selectedItemName === 'Pasta'){
+					// 		// 	io.to(sessionId).emit(
+					// 		// 		'chat message',
+					// 		// 		formatMessage('bot', `Your order ${'Pasta'} has been successfully cancelled`)
+					// 		// 	);		
+					// 		// } else {
 
-							if (session.userOrder.items.length === 0) {
-								session.userOrder.total = '';
-								io.to(sessionId).emit(
-									'chat message',
-									formatMessage('bot', `You do not have any order to cancel`)
-								);
-							} else if (session.userOrder.items.length > 1) {
-								// const removedItem = session.userOrder.items.splice(
-								// 	selectedItem.name,
-								// 	1
-								// );
-								const itemToRemove = session.userOrder.items.indexOf(selectedItem.name);
-								session.userOrder.items.pop(itemToRemove);
-								session.userOrder.total = selectedItem.price;
-								// io.to(sessionId).emit(
-								// 	'chat message',
-								// 	formatMessage(
-								// 		'bot',
-								// 		`Your order: ${session.userOrder.items.map(item => item.name).join(',')} <br> has been cancelled`
-								// 	)
-								// );
-								io.to(sessionId).emit(
-									'chat message',
-									formatMessage(
-										'bot',
-										`Your order has been cancelled successfully`
-									)
-								);
-							}
-						// }
-					}
-					savedSession();
+					// 		// 	io.to(sessionId).emit(
+					// 		// 		'chat message',
+					// 		// 		formatMessage('bot', `You have not ordered ${'Burger' && 'Pizza' && 'Salad' && 'Rice' && 'Beans'}`)
+					// 		// 	);
+					// 		// }
+					// 		}
+						
+					// 	} else {
+					// 		io.to(sessionId).emit(
+					// 			'chat message',
+					// 			formatMessage('bot', `You have not made any order`)
+					// 		);
+					// 	}
+					// }
+					
+					// toCancelOrder( 'Burger', 'Pizza' && 'Salad' || 'Rice' || 'Beans' || 'Pasta')
+					// toCancelOrder(selectedItemId )
+					// 		if(selectedItemName === 'Pizza'){
+					// 			toCancelOrder('Pizza' )
+					// 		} else if(selectedItemName === 'Salad'){
+					// 			toCancelOrder('Salad' )
+					// 		} else if(selectedItemName === 'Rice'){
+					// 			toCancelOrder('Rice' )
+					// 		} else if(selectedItemName === 'Beans'){
+					// 			toCancelOrder('Beans' )
+					// 		} else if(selectedItemName === 'Pasta'){
+					// 			toCancelOrder('Pasta' )
+					// 		} else {
+					// 			toCancelOrder('Burger' )
+					// 		}
+					
+					// toCancelOrder('Pizza' )||
+					// toCancelOrder('Salad' )
+					// toCancelOrder('Rice' )
+					// toCancelOrder('Beans' )
+					// toCancelOrder('Pasta' )
+					// toCancelOrder('Burger' )
 					io.to(sessionId).emit(
 						'chat message',
 						formatMessage(
 							'bot',
-							`Your order has been cancelled successfully`
+							`Please select an item to continue: <br>
+								👉Select 1 to Place your order
+								<br />
+								👉Select 99 to checkout your order
+								<br />
+								👉Select 98 to see your order history
+								<br />
+								👉Select 97 to see your current order
+								<br />
+								👉Select 0 to cancel your order
+								<br />`
 						)
 					);
 
@@ -422,7 +473,7 @@ io.on('connection', (socket) => {
 						session.userOrder.total = selectedItem.price;
 						console.log(selectedItem.name);
 
-						// session.save(selectedItem.name && selectedItem.total);
+						session.save(selectedItem.name && selectedItem.total);
 					}
 					savedSession();
 
@@ -549,38 +600,7 @@ io.on('connection', (socket) => {
 							};
 						}
 
-						// // Get the current session for the user
-						// const session = socket.request.session;
-						// // Create a new userOrder object or update an existing one
-						// if (!session.userOrder) {
-						// 	session.userOrder = {
-						// 		items: [],
-						// 		total: '',
-						// 	};
-						// }
-						//
-						// // Get the selected item from the menu
-						// const selectedItem = menuItems.find(
-						// 	(item) => item.id === inputNumber
-						// );
-						// // Add the selected item to the user order
-						// session.userOrder.items.push(selectedItem.name);
-						// // Add the selected item price to the total price
-						// session.userOrder.total = selectedItem.price;
-						// // Save the user order to the session
-						// session.save();
-						//
-
-						// // Initialize the selected item price variable
-						// let selectedItemPrice = 0;
-						// // Increase the price of the selected item when the user selects a new item
-						// selectedItemPrice += menuItems[inputNumber - 1].price;
-						// // Add the selected item to the user order
-						// session.userOrder.items.push(menuItems[inputNumber - 1].name);
-						// // Add the selected item price to the total price
-						// session.userOrder.total += selectedItemPrice;
-						// // Save the user order to the session
-						// session.save();
+						
 
 						const selectedItem = menuItems.find(
 							(item) => item.id === inputNumber
@@ -606,7 +626,7 @@ io.on('connection', (socket) => {
 						formatMessage('bot', `Please select a valid option`)
 					);
 
-					return progress = 1;
+					return (progress = 1);
 				}
 
 				io.to(sessionId).emit(
@@ -630,7 +650,6 @@ io.on('connection', (socket) => {
 				progress = 1;
 
 				break;
-			
 		}
 	});
 	socket.on('disconnect', () => {
